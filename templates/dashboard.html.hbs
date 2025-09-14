@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Rocket + PostgreSQL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+        }
+        
+        .user-info span {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .api-endpoint {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .get { background: #d4edda; color: #155724; }
+        .post { background: #cce5ff; color: #004085; }
+        .put { background: #fff3cd; color: #856404; }
+        .delete { background: #f8d7da; color: #721c24; }
+        
+        .endpoint-url {
+            color: #495057;
+            font-size: 1.1rem;
+        }
+        
+        .description {
+            color: #6c757d;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            margin: 10px 10px 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <span id="userName">Carregando...</span>
+                <span id="userEmail">Carregando...</span>
+                <a href="#" class="logout-btn" onclick="logout()">Sair</a>
+            </div>
+            <h1>Dashboard</h1>
+            <p>Bem-vindo ao seu painel de controle</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Biblioteca Digital</h2>
+                <p>Acesse a biblioteca para descobrir e ler livros:</p>
+                <a href="/library" class="btn">📚 Ir para Biblioteca</a>
+            </div>
+            
+            <div class="section">
+                <h2>API de Usuários</h2>
+                <p>Use os botões abaixo para testar a API de usuários:</p>
+                
+                <button class="btn" onclick="listUsers()">Listar Usuários</button>
+                <button class="btn btn-secondary" onclick="showCreateForm()">Criar Usuário</button>
+                <button class="btn btn-danger" onclick="clearResults()">Limpar Resultados</button>
+                
+                <div id="results"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Endpoints Disponíveis</h2>
+                
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-url">/users</span>
+                    <div class="description">Lista todos os usuários cadastrados</div>
+                </div>
+                
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-url">/users</span>
+                    <div class="description">Cria um novo usuário</div>
+                </div>
+                
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-url">/users/{id}</span>
+                    <div class="description">Busca um usuário específico pelo ID</div>
+                </div>
+                
+                <div class="api-endpoint">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-url">/users/{id}</span>
+                    <div class="description">Atualiza um usuário existente</div>
+                </div>
+                
+                <div class="api-endpoint">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-url">/users/{id}</span>
+                    <div class="description">Remove um usuário do sistema</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Carregar informações do usuário
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.name) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+            } else {
+                // Se não há usuário logado, redirecionar para login
+                window.location.href = '/login';
+            }
+        };
+        
+        // Função de logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        
+        // Listar usuários
+        async function listUsers() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div>Carregando usuários...</div>';
+            
+            try {
+                const response = await fetch('/users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<h3>Usuários Cadastrados:</h3><ul>';
+                    data.data.forEach(user => {
+                        html += `<li><strong>${user.name}</strong> (${user.email}) - ID: ${user.id}</li>`;
+                    });
+                    html += '</ul>';
+                    results.innerHTML = html;
+                } else {
+                    results.innerHTML = `<div class="error">Erro: ${data.message}</div>`;
+                }
+            } catch (err) {
+                results.innerHTML = '<div class="error">Erro de conexão</div>';
+            }
+        }
+        
+        // Mostrar formulário de criação
+        function showCreateForm() {
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <h3>Criar Novo Usuário:</h3>
+                <form id="createUserForm">
+                    <div style="margin: 10px 0;">
+                        <label>Nome:</label><br>
+                        <input type="text" id="createName" required style="width: 100%; padding: 8px; margin: 5px 0;">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Email:</label><br>
+                        <input type="email" id="createEmail" required style="width: 100%; padding: 8px; margin: 5px 0;">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Senha:</label><br>
+                        <input type="password" id="createPassword" required style="width: 100%; padding: 8px; margin: 5px 0;">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Idade (opcional):</label><br>
+                        <input type="number" id="createAge" style="width: 100%; padding: 8px; margin: 5px 0;">
+                    </div>
+                    <button type="submit" class="btn">Criar Usuário</button>
+                </form>
+            `;
+            
+            document.getElementById('createUserForm').addEventListener('submit', createUser);
+        }
+        
+        // Criar usuário
+        async function createUser(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('createName').value,
+                email: document.getElementById('createEmail').value,
+                password: document.getElementById('createPassword').value,
+                age: document.getElementById('createAge').value ? parseInt(document.getElementById('createAge').value) : null
+            };
+            
+            try {
+                const response = await fetch('/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('results').innerHTML = `<div class="success">Usuário criado com sucesso!</div>`;
+                    setTimeout(listUsers, 1000);
+                } else {
+                    document.getElementById('results').innerHTML = `<div class="error">Erro: ${data.message}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('results').innerHTML = '<div class="error">Erro de conexão</div>';
+            }
+        }
+        
+        // Limpar resultados
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[package]
+name = "rocket-postgres-tutorial"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = { version = "0.5", features = ["json"] }
+rocket_dyn_templates = { version = "0.1", features = ["handlebars"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+anyhow = "1.0"
+jsonwebtoken = "9.2"
+bcrypt = "0.15"
+rocket_http = "0.5"

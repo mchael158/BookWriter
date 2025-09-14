@@ -1,0 +1,9 @@
+# Configurações do Banco de Dados
+DATABASE_URL=postgresql://postgres:senha123@localhost:5432/rocket_tutorial
+
+# Configurações do Servidor
+ROCKET_PORT=8000
+ROCKET_ADDRESS=0.0.0.0
+
+# Configurações de Log
+RUST_LOG=info
