@@ -1,400 +1,233 @@
-# Tutorial Completo: Aplicativo Web com Rocket + PostgreSQL
+# 📚 BookWriter - Biblioteca Digital
 
-Este é um tutorial completo e detalhado para criar um aplicativo web usando o framework Rocket (Rust) com banco de dados PostgreSQL. O projeto inclui uma API REST completa para gerenciamento de usuários.
+[![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![Rocket](https://img.shields.io/badge/rocket-0.5-blue.svg)](https://rocket.rs/)
+[![PostgreSQL](https://img.shields.io/badge/postgresql-15+-blue.svg)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Pré-requisitos
+Uma aplicação web moderna de **biblioteca digital** construída com **Rocket** (framework web em Rust) e **PostgreSQL**. O projeto implementa um sistema completo de gerenciamento de livros com autenticação, categorias e interface web responsiva.
 
-Antes de começar, certifique-se de ter instalado:
+## ✨ Funcionalidades
 
-1. **Rust** (versão 1.70+)
+- 🔐 **Sistema de Autenticação JWT** completo
+- 👤 **Gerenciamento de Usuários** com CRUD
+- 📚 **Biblioteca Digital** com livros e categorias
+- 🏷️ **Sistema de Categorias** predefinidas
+- 📖 **Interface de Leitura** moderna e responsiva
+- 🔍 **Busca e Filtros** de livros
+- 🌐 **API REST** completa
+- 🗄️ **Banco de Dados** PostgreSQL com migrações
+- 🎨 **Templates HTML** com Handlebars
+- 🧪 **Testes Automatizados** incluídos
+- 🐳 **Docker** pronto para produção
+- 🚀 **CI/CD** com GitHub Actions
+
+## 🚀 Início Rápido
+
+### Pré-requisitos
+
+- **Rust** 1.70+
+- **PostgreSQL** 15+
+- **Docker** (opcional)
+
+### Instalação
+
+1. **Clone o repositório**
    ```bash
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   source ~/.cargo/env
+   git clone https://github.com/mchael158/BookWriter.git
+   cd BookWriter
    ```
 
-2. **PostgreSQL** (versão 12+)
-   - Ubuntu/Debian: `sudo apt install postgresql postgresql-contrib`
-   - Arch Linux: `sudo pacman -S postgresql`
-   - macOS: `brew install postgresql`
+2. **Configure o banco de dados**
+   ```bash
+   ./setup_database.sh
+   ```
 
-3. **Ferramentas de desenvolvimento**
-   - `jq` (para formatação JSON): `sudo apt install jq`
-   - `curl` (para testes de API)
+3. **Execute a aplicação**
+   ```bash
+   cargo run
+   ```
 
-## Estrutura do Projeto
+4. **Acesse a aplicação**
+   - Web: http://localhost:8000
+   - API: http://localhost:8000/api
 
-```
-rocket-postgres-tutorial/
-├── Cargo.toml                 # Dependências do projeto
-├── src/
-│   ├── main.rs               # Ponto de entrada da aplicação
-│   ├── database.rs           # Configuração do banco de dados
-│   ├── models.rs             # Modelos de dados e DTOs
-│   └── handlers/
-│       ├── mod.rs            # Módulo de handlers
-│       └── users.rs          # Handlers para usuários
-├── templates/
-│   └── index.html.hbs        # Template da página inicial
-├── setup_database.sh         # Script de configuração do banco
-├── test_api.sh              # Script de testes da API
-└── README.md                # Esta documentação
-```
-
-## Configuração Inicial
-
-### 1. Configurar o Banco de Dados
-
-Execute o script de configuração:
+### Docker (Recomendado)
 
 ```bash
-./setup_database.sh
+# Executar com Docker Compose
+docker-compose up
+
+# Acessar a aplicação
+# Web: http://localhost:8000
+# Adminer: http://localhost:8080
 ```
 
-Este script irá:
-- Verificar se o PostgreSQL está instalado e rodando
-- Criar o banco de dados `rocket_tutorial`
-- Configurar o usuário `postgres` com senha `senha123`
+## 📖 Documentação
 
-### 2. Instalar Dependências
+- [**Tutorial Completo**](README.md) - Guia detalhado de desenvolvimento
+- [**Início Rápido**](INICIO_RAPIDO.md) - Configuração rápida
+- [**Exemplos de Uso**](exemplos_uso.md) - Exemplos da API
+- [**Guia do Git**](GIT_GUIDE.md) - Como contribuir
+- [**Changelog**](CHANGELOG.md) - Histórico de mudanças
 
-```bash
-cargo build
-```
+## 🏗️ Arquitetura
 
-### 3. Executar o Aplicativo
+### Backend
+- **Rocket**: Framework web assíncrono em Rust
+- **SQLx**: ORM assíncrono para PostgreSQL
+- **JWT**: Autenticação com tokens
+- **bcrypt**: Hash de senhas seguro
 
-```bash
-cargo run
-```
+### Frontend
+- **Handlebars**: Templates HTML
+- **CSS3**: Design responsivo
+- **JavaScript**: Interatividade
 
-O servidor estará disponível em: `http://localhost:8000`
+### Banco de Dados
+- **PostgreSQL**: Banco relacional
+- **Migrações**: Automáticas via SQLx
+- **Relacionamentos**: Users → Books → Categories
 
-## Explicação Detalhada do Código
-
-### 1. Cargo.toml - Dependências
-
-```toml
-[dependencies]
-rocket = { version = "0.5", features = ["json"] }           # Framework web
-rocket_dyn_templates = { version = "0.1", features = ["handlebars"] }  # Templates
-serde = { version = "1.0", features = ["derive"] }          # Serialização
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }  # Banco de dados
-chrono = { version = "0.4", features = ["serde"] }          # Manipulação de datas
-uuid = { version = "1.0", features = ["v4", "serde"] }      # Geração de UUIDs
-anyhow = "1.0"                                              # Tratamento de erros
-```
-
-### 2. main.rs - Ponto de Entrada
-
-O arquivo principal configura:
-- Inicialização do banco de dados
-- Registro das rotas
-- Configuração dos templates
-- Lançamento do servidor Rocket
-
-### 3. database.rs - Configuração do Banco
-
-Este módulo gerencia:
-- Conexão com PostgreSQL
-- Pool de conexões para performance
-- Execução de migrações automáticas
-- Criação da tabela `users`
-
-### 4. models.rs - Modelos de Dados
-
-Define as estruturas de dados:
-- `User`: Modelo principal do banco de dados
-- `CreateUserRequest`: DTO para criação de usuários
-- `UpdateUserRequest`: DTO para atualização de usuários
-- `ApiResponse`: Resposta padronizada da API
-
-### 5. handlers/users.rs - Lógica de Negócio
-
-Implementa os endpoints da API:
-- `GET /users`: Lista todos os usuários
-- `GET /users/{id}`: Busca usuário por ID
-- `POST /users`: Cria novo usuário
-- `PUT /users/{id}`: Atualiza usuário existente
-- `DELETE /users/{id}`: Remove usuário
-
-## API Endpoints
+## 🔧 API Endpoints
 
 ### Autenticação
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Registro
+- `GET /api/auth/verify` - Verificar token
 
-#### Registrar Usuário
-```bash
-curl -X POST http://localhost:8000/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "João Silva",
-    "email": "joao@email.com",
-    "password": "senha123",
-    "age": 30
-  }'
-```
+### Usuários
+- `GET /api/users` - Listar usuários
+- `GET /api/users/{id}` - Obter usuário
+- `POST /api/users` - Criar usuário
+- `PUT /api/users/{id}` - Atualizar usuário
+- `DELETE /api/users/{id}` - Deletar usuário
 
-#### Fazer Login
-```bash
-curl -X POST http://localhost:8000/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "joao@email.com",
-    "password": "senha123"
-  }'
-```
+### Livros
+- `GET /api/books` - Listar livros
+- `GET /api/books/{id}` - Obter livro
+- `POST /api/books` - Criar livro
+- `PUT /api/books/{id}` - Atualizar livro
+- `DELETE /api/books/{id}` - Deletar livro
 
-### Biblioteca Digital
+### Categorias
+- `GET /api/categories` - Listar categorias
+- `POST /api/categories` - Criar categoria
 
-#### Listar Livros
-```bash
-curl http://localhost:8000/books
-```
-
-#### Buscar Livro por ID
-```bash
-curl http://localhost:8000/books/{id}
-```
-
-#### Criar Livro
-```bash
-curl -X POST http://localhost:8000/books \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "O Guia do Mochileiro das Galáxias",
-    "author": "Douglas Adams",
-    "isbn": "978-0-345-39180-3",
-    "description": "Uma comédia de ficção científica",
-    "content": "Capítulo 1: A Casa...",
-    "category_id": "CATEGORY_ID",
-    "is_public": true
-  }'
-```
-
-#### Atualizar Livro
-```bash
-curl -X PUT http://localhost:8000/books/{id} \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Novo Título",
-    "description": "Nova descrição"
-  }'
-```
-
-#### Deletar Livro
-```bash
-curl -X DELETE http://localhost:8000/books/{id}
-```
-
-#### Listar Categorias
-```bash
-curl http://localhost:8000/categories
-```
-
-#### Criar Categoria
-```bash
-curl -X POST http://localhost:8000/categories \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Ficção Científica",
-    "description": "Livros de ficção científica"
-  }'
-```
-
-### Gerenciamento de Usuários
-
-#### Listar Usuários
-```bash
-curl http://localhost:8000/users
-```
-
-#### Buscar Usuário por ID
-```bash
-curl http://localhost:8000/users/{id}
-```
-
-#### Criar Usuário
-```bash
-curl -X POST http://localhost:8000/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "João Silva",
-    "email": "joao@email.com",
-    "password": "senha123",
-    "age": 30
-  }'
-```
-
-#### Atualizar Usuário
-```bash
-curl -X PUT http://localhost:8000/users/{id} \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "João Silva Atualizado",
-    "age": 31
-  }'
-```
-
-#### Deletar Usuário
-```bash
-curl -X DELETE http://localhost:8000/users/{id}
-```
-
-## Testando a API
-
-Execute os scripts de testes:
+## 🧪 Testes
 
 ```bash
-# Testar API básica
+# Testes da API
 ./test_api.sh
 
-# Testar sistema de autenticação
+# Testes de autenticação
 ./test_auth.sh
 
-# Testar funcionalidades de livros
+# Testes de livros
 ./test_books.sh
+
+# Testes unitários
+cargo test
 ```
 
-Estes scripts testam todos os endpoints automaticamente e mostram os resultados.
+## 🐳 Docker
 
-## Interface Web
+### Desenvolvimento
+```bash
+# Executar todos os serviços
+docker-compose up
 
-O aplicativo inclui uma interface web completa:
+# Apenas o banco
+docker-compose up postgres
 
-- **Página Inicial**: http://localhost:8000
-- **Login**: http://localhost:8000/login
-- **Registro**: http://localhost:8000/register
-- **Dashboard**: http://localhost:8000/dashboard
-- **Biblioteca Digital**: http://localhost:8000/library
-
-## Estrutura do Banco de Dados
-
-### Tabela de Usuários
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    age INTEGER,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+# Apenas a aplicação
+docker-compose up app
 ```
 
-### Tabela de Categorias
-```sql
-CREATE TABLE categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Produção
+```bash
+# Build da imagem
+docker build -t bookwriter .
+
+# Executar container
+docker run -p 8000:8000 bookwriter
 ```
 
-### Tabela de Livros
-```sql
-CREATE TABLE books (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    author VARCHAR(255) NOT NULL,
-    isbn VARCHAR(20),
-    description TEXT,
-    content TEXT NOT NULL,
-    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    is_public BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+## 🚀 Deploy
+
+### GitHub Actions
+O projeto inclui CI/CD automatizado:
+- ✅ Testes em cada PR
+- ✅ Build automático
+- ✅ Verificação de segurança
+- ✅ Deploy automático
+
+### Variáveis de Ambiente
+```bash
+DATABASE_URL=postgresql://user:pass@localhost:5432/bookwriter
+ROCKET_ADDRESS=0.0.0.0
+ROCKET_PORT=8000
+JWT_SECRET=sua_chave_secreta
 ```
 
-### Tabela de Progresso de Leitura
-```sql
-CREATE TABLE reading_progress (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-    current_page INTEGER DEFAULT 0,
-    total_pages INTEGER DEFAULT 0,
-    is_completed BOOLEAN DEFAULT false,
-    last_read_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, book_id)
-);
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) para mais detalhes.
+
+## 📊 Estrutura do Projeto
+
+```
+BookWriter/
+├── src/                    # Código fonte Rust
+│   ├── main.rs            # Ponto de entrada
+│   ├── database.rs        # Configuração do banco
+│   ├── models.rs          # Modelos de dados
+│   ├── models/book.rs     # Modelos de livros
+│   └── handlers/          # Handlers da API
+│       ├── auth.rs        # Autenticação
+│       ├── users.rs       # Usuários
+│       └── books.rs       # Livros
+├── templates/             # Templates HTML
+├── .github/workflows/     # CI/CD
+├── docker-compose.yml     # Orquestração
+├── Dockerfile            # Imagem Docker
+└── docs/                 # Documentação
 ```
 
-## Recursos Implementados
+## 📈 Roadmap
 
-### Segurança
-- Autenticação JWT com tokens seguros
-- Hash de senhas com bcrypt
-- Validação de entrada de dados
-- Tratamento de erros robusto
-- Prevenção de SQL injection (usando SQLx)
-- Validação de UUIDs
+- [ ] Sistema de progresso de leitura
+- [ ] Estatísticas de usuário
+- [ ] Sistema de favoritos
+- [ ] Comentários e avaliações
+- [ ] Sistema de recomendações
+- [ ] Upload de capas de livros
+- [ ] Sistema de busca avançada
+- [ ] API de estatísticas
+- [ ] Sistema de notificações
+- [ ] Modo offline
 
-### Performance
-- Pool de conexões com banco de dados
-- Queries otimizadas
-- Serialização eficiente com Serde
+## 📄 Licença
 
-### Usabilidade
-- Interface web moderna e responsiva
-- Sistema de login e registro completo
-- Dashboard interativo para usuários
-- Biblioteca digital com funcionalidades completas
-- Sistema de categorias para organização
-- Interface de leitura de livros
-- Documentação interativa
-- Scripts de automação
-- Respostas padronizadas da API
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
 
-## Próximos Passos
+## 👥 Autores
 
-Para expandir este projeto, você pode:
+- **Rocket Tutorial** - *Desenvolvimento inicial* - [GitHub](https://github.com/rocket-tutorial)
 
-1. **Adicionar autenticação**
-   - Implementar JWT tokens
-   - Sistema de login/logout
-   - Middleware de autenticação
+## 🙏 Agradecimentos
 
-2. **Melhorar a interface**
-   - Adicionar formulários interativos
-   - Implementar JavaScript para AJAX
-   - Adicionar validação no frontend
+- [Rocket](https://rocket.rs/) - Framework web incrível
+- [SQLx](https://github.com/launchbadge/sqlx) - ORM assíncrono
+- [PostgreSQL](https://www.postgresql.org/) - Banco de dados robusto
+- [Rust](https://www.rust-lang.org/) - Linguagem de programação
 
-3. **Adicionar mais funcionalidades**
-   - Paginação de resultados
-   - Filtros e busca
-   - Upload de arquivos
-   - Logs de auditoria
+---
 
-4. **Deploy em produção**
-   - Configurar Docker
-   - Usar variáveis de ambiente
-   - Configurar HTTPS
-   - Implementar monitoramento
-
-## Solução de Problemas
-
-### Erro de Conexão com Banco
-- Verifique se o PostgreSQL está rodando: `sudo systemctl status postgresql`
-- Confirme as credenciais no arquivo `database.rs`
-- Execute o script `setup_database.sh` novamente
-
-### Erro de Compilação
-- Atualize o Rust: `rustup update`
-- Limpe o cache: `cargo clean`
-- Recompile: `cargo build`
-
-### Erro de Porta em Uso
-- Mude a porta no arquivo `main.rs`
-- Ou mate o processo: `sudo lsof -ti:8000 | xargs kill -9`
-
-## Conclusão
-
-Este tutorial demonstra como criar um aplicativo web completo usando Rust com Rocket e PostgreSQL. O código é seguro, performático e fácil de manter, seguindo as melhores práticas da linguagem Rust.
-
-O projeto serve como base sólida para aplicações web mais complexas e pode ser facilmente expandido conforme suas necessidades.
+⭐ **Se este projeto te ajudou, considere dar uma estrela!** ⭐
