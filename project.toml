@@ -1,0 +1,39 @@
+[project]
+name = "rocket-postgres-tutorial"
+version = "0.1.0"
+description = "Aplicação de leitura digital com Rocket + PostgreSQL"
+authors = ["Rocket Tutorial <tutorial@rocket.dev>"]
+license = "MIT"
+repository = "https://github.com/rocket-tutorial/biblioteca-digital"
+keywords = ["rust", "rocket", "postgresql", "web", "api", "biblioteca", "livros"]
+categories = ["web-programming", "database"]
+
+[features]
+default = ["json", "templates"]
+json = ["rocket/json"]
+templates = ["rocket_dyn_templates/handlebars"]
+auth = ["jwt", "bcrypt"]
+database = ["sqlx", "postgres"]
+
+[build]
+target = "x86_64-unknown-linux-gnu"
+rust_version = "1.70.0"
+
+[database]
+url = "postgresql://postgres:senha123@localhost:5432/rocket_tutorial"
+pool_size = 10
+max_connections = 20
+
+[server]
+host = "127.0.0.1"
+port = 8000
+workers = 16
+
+[security]
+jwt_secret = "sua_chave_secreta_super_segura_aqui"
+jwt_expiration_hours = 24
+password_min_length = 6
+
+[logging]
+level = "info"
+format = "json"

@@ -1,0 +1,30 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Rust files
+*.rs text
+Cargo.toml text
+Cargo.lock text
+
+# Shell scripts
+*.sh text eol=lf
+
+# HTML templates
+*.hbs text
+*.html text
+
+# Markdown files
+*.md text
+
+# Configuration files
+*.toml text
+*.yaml text
+*.yml text
+*.json text
+
+# SQL files
+*.sql text
+
+# Git files
+.gitignore text
+.gitattributes text
